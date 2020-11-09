@@ -1,0 +1,30 @@
+version: "3"
+
+services:
+
+  rabbit:
+    image: rabbitmq:latest
+
+  fastapi:
+    build: producer
+    volumes:
+    - ./producer:/producer
+    working_dir: //producer
+    ports:
+      - 8080:8080
+    depends_on:
+      - rabbit
+      - listener
+    restart: on-failure
+    entrypoint: uvicorn app:app --host 0.0.0.0 --port 8080
+
+  listener:
+    build: listener
+    volumes:
+    - ./listener:/listener
+    working_dir: //listener
+    depends_on:
+      - rabbit
+
+    restart: unless-stopped
+    entrypoint: python -u receive.py
